@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:20.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:251.253418px;left:73.333336px"><nobr>人从众， 火炎焱， 2019 西昌火把节盛况</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:722.978027px;left:121.333336px"><nobr>清凉夏日· 燃情火把</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:787.221497px;left:121.333336px"><nobr>2019 中国西昌· 凉山彝族传统火把节</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:850.131531px;left:121.333336px"><nobr>2019 年7 月2 6 日晚， 随着夜幕降临， 当篝火点燃的一刻彻夜狂欢</nobr></span><span style="position:absolute;top:887.464844px;left:121.333336px"><nobr>的信号开启， 狂欢活动在洛古波乡、 大箐乡、 四合乡三个地方同时</nobr></span><span style="position:absolute;top:923.464844px;left:121.333336px"><nobr>拉开帷幕， 据不完全统计， 31.5 万人次游客参与了今晚火把狂欢。 </nobr></span><span style="position:absolute;top:960.798157px;left:121.333336px"><nobr>正是最“ 热” 的时节， 一座“ 任性” 的城， 一群“ 任性” 的人， 聚</nobr></span><span style="position:absolute;top:996.798157px;left:121.333336px"><nobr>在一起“ 玩火” 。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:26.666672px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:92.515625px;left:73.333336px"><nobr>内容</nobr></span></span></p><p><span style="font-family:Calibri;font-size:13.333330px;font-style:normal;font-weight:normal;color:#767676;"><span style="position:absolute;top:155.522629px;left:73.333336px"><nobr>2019 <span style="font-family:微软雅黑;">年</span><span style="font-family:Calibri;">7 </span><span style="font-family:微软雅黑;">月</span><span style="font-family:Calibri;">2 8 </span><span style="font-family:微软雅黑;">日星期日</span></nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:13.333330px;font-style:normal;font-weight:normal;color:#767676;"><span style="position:absolute;top:155.522629px;left:289.133179px"><nobr>下午<span style="font-family:Calibri;">1 1:16 </span></nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00002.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:-21.868570px;left:121.333336px"><nobr>正是最“ 热” 的时节， 一座“ 任性” 的城， 一群“ 任性” 的人， 聚</nobr></span><span style="position:absolute;top:14.131429px;left:121.333336px"><nobr>在一起“ 玩火” 。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:541.520752px;left:121.333336px"><nobr>洛古波乡“ 星落人间· 火舞彝寨” 原生态火把狂欢</nobr></span><span style="position:absolute;top:604.430969px;left:121.333336px"><nobr>狂欢地点： 洛古波火把广场</nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00003.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:148.624344px;left:121.333336px"><nobr>洛古波会场本次演员阵容达1150 人， 融入5 G 、 立体三维动画原创</nobr></span><span style="position:absolute;top:185.957687px;left:121.333336px"><nobr>视频( 3D) ， 沉浸式舞台设置， 极具视觉冲击力全面幅巨型超宽屏</nobr></span><span style="position:absolute;top:221.957687px;left:121.333336px"><nobr>幕， 原创原生态火把狂欢艺术表演， 超前的舞美设施高度融合等高</nobr></span><span style="position:absolute;top:259.291016px;left:121.333336px"><nobr>科技技术， 展现一场数字与文化结合的盛宴。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00004.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:799.079834px;left:121.333336px"><nobr>吉祥物“ 火娃” 首次亮相， 火把、 火舞、 火秀， 构筑星落人间、 火</nobr></span><span style="position:absolute;top:836.413208px;left:121.333336px"><nobr>舞彝寨的美丽画卷。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00005.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:380.405670px;left:121.333336px"><nobr>洛古波作为西昌市民族风情旅游长廊节点之一， 以“ 星落人间火</nobr></span><span style="position:absolute;top:417.739014px;left:121.333336px"><nobr>舞彝寨” 为主题的火把狂欢体验， 打造出了民俗旅游文化品牌- - </nobr></span><span style="position:absolute;top:453.738983px;left:121.333336px"><nobr>“ 满天星斗洛古波” 。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00006.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:993.728516px;left:121.333336px"><nobr>烟花璀璨， 火光冲天， 半山的千把火把同时点燃， 今夜， 火是信</nobr></span><span style="position:absolute;top:1031.061890px;left:121.333336px"><nobr>仰， 是精神， 是传承， 今夜， 是火的夜晚， 是火的狂欢。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00007.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:11.061849px;left:121.333336px"><nobr>烟花璀璨， 火光冲天， 半山的千把火把同时点燃， 今夜， 火是信</nobr></span><span style="position:absolute;top:48.395184px;left:121.333336px"><nobr>仰， 是精神， 是传承， 今夜， 是火的夜晚， 是火的狂欢。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:1073.153076px;left:121.333336px"><nobr>“ 谁把太空敲粉碎满天星斗落人间” ， 今夜我们狂欢到天明。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00008.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:90.486412px;left:121.333336px"><nobr>“ 谁把太空敲粉碎满天星斗落人间” ， 今夜我们狂欢到天明。 </nobr></span><span style="position:absolute;top:153.396561px;left:121.333336px"><nobr>四合乡火把狂欢“ 永不落幕的火把节” 原生态狂欢</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:216.306641px;left:121.333336px"><nobr>狂欢地点： 四合火把广场</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:744.499878px;left:121.333336px"><nobr>燃烧的火把， 热烈而纯粹， 今夜上万把火把同燃， 灿若星辰， 却</nobr></span><span style="position:absolute;top:781.833252px;left:121.333336px"><nobr>比星辰多了明艳。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00009.jpg"/></nobr></div>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00010.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:338.024017px;left:121.333336px"><nobr>火把燃起来， 我们祈求风调雨顺五谷丰登， 达体舞跳起来， 欢乐</nobr></span><span style="position:absolute;top:375.357330px;left:121.333336px"><nobr>在此刻淹没整个四合乡。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:902.016418px;left:121.333336px"><nobr>用热辣辣的火把染红仲夏之夜， 今年今夜今时， 一切的欢歌笑语来</nobr></span><span style="position:absolute;top:939.349854px;left:121.333336px"><nobr>得纯粹， 真实而自然。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00011.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:896.472778px;left:121.333336px"><nobr>彝家儿女盛装丽服， 一切的儿女情长、 英雄气概， 都在此刻尽在不</nobr></span><span style="position:absolute;top:933.806091px;left:121.333336px"><nobr>言中。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:996.514893px;left:121.333336px"><nobr>大箐乡“ 清凉夏日· 邛池流星” 原生态火把狂欢</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:1059.425049px;left:121.333336px"><nobr>狂欢地点： 大箐诗歌小镇</nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00012.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:13.848226px;left:121.333336px"><nobr>大箐乡“ 清凉夏日· 邛池流星” 原生态火把狂欢</nobr></span><span style="position:absolute;top:76.758385px;left:121.333336px"><nobr>狂欢地点： 大箐诗歌小镇</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:985.730591px;left:121.333336px"><nobr>云披红日恰含山， 烈炬参差竟往还， 万朵莲花开海市， 一天星斗下</nobr></span><span style="position:absolute;top:1023.063904px;left:121.333336px"><nobr>人间， 美丽淳朴的大箐乡诗歌小镇， 沉浸在欢乐的海洋中。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00013.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:3.063802px;left:121.333336px"><nobr>云披红日恰含山， 烈炬参差竟往还， 万朵莲花开海市， 一天星斗下</nobr></span><span style="position:absolute;top:40.397137px;left:121.333336px"><nobr>人间， 美丽淳朴的大箐乡诗歌小镇， 沉浸在欢乐的海洋中。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:567.056030px;left:121.333336px"><nobr>点上火把跳起达体舞， 我们都是同样玩火的人， 热情的西昌， 向</nobr></span><span style="position:absolute;top:604.389404px;left:121.333336px"><nobr>世界发出邀请， 加入狂欢。 </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00014.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:148.382156px;left:121.333336px"><nobr>扎堆的火把燃烧万人激情， 不熄的火焰， 有我的沉醉你的喜悦， 今</nobr></span><span style="position:absolute;top:185.715500px;left:121.333336px"><nobr>晚狂欢， 嗨到天明。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:659.435791px;left:121.333336px"><nobr>火把节小科普</nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:722.345520px;left:121.333336px"><nobr>彝族人民繁衍生息在这片有着悠久历史、 古老文化、 神奇传说的土</nobr></span><span style="position:absolute;top:759.678894px;left:121.333336px"><nobr>地上， 至今还保留着古朴、 独特的文化传统。 彝族崇尚火文化， 认</nobr></span><span style="position:absolute;top:795.678955px;left:121.333336px"><nobr>为火是生命的起点， 也是生命的终结。 作为一个崇拜火的民族， 火</nobr></span><span style="position:absolute;top:833.012268px;left:121.333336px"><nobr>把节是彝族最重要的节日， 节日的寓意是用火焰驱虫辟邪。 在人类</nobr></span><span style="position:absolute;top:869.012268px;left:121.333336px"><nobr>征服自然、 改造自然的过程中， 火把节逐渐演变成今天的文化民族</nobr></span><span style="position:absolute;top:906.345581px;left:121.333336px"><nobr>节。 为了庆祝改变自然的伟大胜利， 人们欢聚在火把场， 狂欢三天</nobr></span><span style="position:absolute;top:942.345581px;left:121.333336px"><nobr>三夜。 </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:1005.383240px;left:121.333336px"><nobr>早在2 006 年5 月2 0 日， 彝族火把节经国务院批准已列入第一批国</nobr></span><span style="position:absolute;top:1042.716553px;left:121.333336px"><nobr>家级非物质文化遗产代表作名录！ </nobr></span></span></p>','<div style="position:absolute;top:60.000000px;left:0.000000px"><nobr><img height="983.000000" width="794.000000" src ="bgimg/bg00015.jpg"/></nobr></div><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:22.716715px;left:121.333336px"><nobr>早在2 006 年5 月2 0 日， 彝族火把节经国务院批准已列入第一批国</nobr></span><span style="position:absolute;top:60.050049px;left:121.333336px"><nobr>家级非物质文化遗产代表作名录！ </nobr></span></span></p><p><span style="font-family:微软雅黑;font-size:16.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:122.758873px;left:121.333336px"><nobr>凉山彝族火把节是中国十大民俗节目和四川十大名节， 已被联合国</nobr></span><span style="position:absolute;top:160.092209px;left:121.333336px"><nobr>教科文组织列入“ 2010 年世界非物质文化遗产审批项目” 。 </nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
